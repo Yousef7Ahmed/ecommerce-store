@@ -20,7 +20,7 @@ router.route("/")
     .post(
         authMiddleware,
         checkRole(["ADMIN", "MANAGER"]),
-        upload.single("image"),
+        upload.array("images", 10),
         validate(createProductSchema),
         createProduct
     )
@@ -31,7 +31,7 @@ router.route("/:id")
                 validate(objectIdSchema, "params"),
                 authMiddleware,
                 checkRole(["ADMIN", "MANAGER"]),
-                upload.single("image"),
+                upload.array("images", 10),
                 validate(updateProductSchema),
                 updateProduct
             )

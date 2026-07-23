@@ -17,9 +17,13 @@ const getAllProducts = async (req, res) => {
             .limit(limit);
 
         const formattedProducts = products.map(product => ({
+
             id: product._id,
+
             title: product.title,
+
             description: product.description,
+
             price: product.price,
 
             category: {
@@ -30,10 +34,15 @@ const getAllProducts = async (req, res) => {
             },
 
             stock: product.stock,
-            thumbnail: product.image,
-            images: [product.image],
+
+            thumbnail: product.images?.[0]?.url || "",
+
+            images: product.images.map(img => img.url),
+
             rating: product.averageRating || 0,
+
             discountPercentage: 0,
+
         }));
 
         return res.json({
@@ -66,9 +75,13 @@ const getProduct = async (req, res) => {
         }
 
         return res.json({
+
             id: product._id,
+
             title: product.title,
+
             description: product.description,
+
             price: product.price,
 
             category: {
@@ -79,10 +92,15 @@ const getProduct = async (req, res) => {
             },
 
             stock: product.stock,
-            thumbnail: product.image,
-            images: [product.image],
+
+            thumbnail: product.images?.[0]?.url || "",
+
+            images: product.images.map(img => img.url),
+
             rating: product.averageRating || 0,
+
             discountPercentage: 0,
+
         });
 
     } catch (error) {
@@ -96,117 +114,165 @@ const getProduct = async (req, res) => {
 // Create Product
 // ==========================
 const createProduct = async (req, res) => {
+
     try {
 
         const data = req.body;
 
-        if (!req.file) {
+        if (!req.files || req.files.length === 0) {
+
             return res.status(400).json({
-                message: "Image is required"
+                message: "At least one image is required"
             });
+
         }
 
-        const image = await cloudinaryService.uploadImage(req.file.buffer);
+        const uploadedImages = [];
 
-        data.image = image.secure_url;
-        data.imagePublicId = image.public_id;
+        for (const file of req.files) {
+
+            const image = await cloudinaryService.uploadImage(file.buffer);
+
+            uploadedImages.push({
+
+                url: image.secure_url,
+
+                publicId: image.public_id,
+
+            });
+
+        }
+
+        data.images = uploadedImages;
 
         const newProduct = await Product.create(data);
 
         return res.status(201).json({
+
             message: "Product created successfully",
-            product: newProduct
-        });
 
-    } catch (error) {
+            product: newProduct,
 
-        return res.status(500).json({
-            message: error.message
         });
 
     }
+
+    catch (error) {
+
+        return res.status(500).json({
+
+            message: error.message,
+
+        });
+
+    }
+
 };
 
 // ==========================
 // Update Product
 // ==========================
-const updateProduct = async (req, res) => {
+const createProduct = async (req, res) => {
+
     try {
 
-        const product = await Product.findById(req.params.id);
+        const data = req.body;
 
-        if (!product) {
-            return res.status(404).json({
-                message: "Product not found"
+        if (!req.files || req.files.length === 0) {
+
+            return res.status(400).json({
+                message: "At least one image is required"
             });
+
         }
 
-        if (req.file) {
+        const uploadedImages = [];
 
-            const image = await cloudinaryService.uploadImage(req.file.buffer);
+        for (const file of req.files) {
 
-            if (product.imagePublicId) {
-                await cloudinaryService.deleteImage(product.imagePublicId);
-            }
+            const image = await cloudinaryService.uploadImage(file.buffer);
 
-            req.body.image = image.secure_url;
-            req.body.imagePublicId = image.public_id;
+            uploadedImages.push({
+
+                url: image.secure_url,
+
+                publicId: image.public_id,
+
+            });
+
         }
 
-        const editedProduct = await Product.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            {
-                new: true,
-                runValidators: true
-            }
-        );
+        data.images = uploadedImages;
 
-        return res.status(200).json({
-            message: "Product updated successfully",
-            product: editedProduct
-        });
+        const newProduct = await Product.create(data);
 
-    } catch (error) {
+        return res.status(201).json({
 
-        return res.status(500).json({
-            message: error.message
+            message: "Product created successfully",
+
+            product: newProduct,
+
         });
 
     }
+
+    catch (error) {
+
+        return res.status(500).json({
+
+            message: error.message,
+
+        });
+
+    }
+
 };
 
 // ==========================
 // Delete Product
 // ==========================
 const deleteProduct = async (req, res) => {
+
     try {
 
         const product = await Product.findById(req.params.id);
 
         if (!product) {
+
             return res.status(404).json({
+
                 message: "Product not found"
+
             });
+
         }
 
-        if (product.imagePublicId) {
-            await cloudinaryService.deleteImage(product.imagePublicId);
+        for (const image of product.images) {
+
+            await cloudinaryService.deleteImage(image.publicId);
+
         }
 
         await Product.findByIdAndDelete(req.params.id);
 
         return res.status(200).json({
+
             message: "Product deleted successfully"
-        });
 
-    } catch (error) {
-
-        return res.status(500).json({
-            message: error.message
         });
 
     }
+
+    catch (error) {
+
+        return res.status(500).json({
+
+            message: error.message
+
+        });
+
+    }
+
 };
 
 module.exports = {
