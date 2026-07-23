@@ -97,14 +97,13 @@ const createOrder = async (req, res) => {
         console.log(err.response?.data || err);
 
         res.status(500).json({
-
             message: "PayPal Error",
-
+            error: err.response?.data || err.message,
         });
 
-    }
+            }
 
-};
+        };
 
 
 const captureOrder = async (req, res) => {
