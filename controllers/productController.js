@@ -172,45 +172,71 @@ const createProduct = async (req, res) => {
 // ==========================
 // Update Product
 // ==========================
-const createProduct = async (req, res) => {
+const updateProduct = async (req, res) => {
 
     try {
 
-        const data = req.body;
+        const product = await Product.findById(req.params.id);
 
-        if (!req.files || req.files.length === 0) {
+        if (!product) {
 
-            return res.status(400).json({
-                message: "At least one image is required"
-            });
+            return res.status(404).json({
 
-        }
-
-        const uploadedImages = [];
-
-        for (const file of req.files) {
-
-            const image = await cloudinaryService.uploadImage(file.buffer);
-
-            uploadedImages.push({
-
-                url: image.secure_url,
-
-                publicId: image.public_id,
+                message: "Product not found"
 
             });
 
         }
 
-        data.images = uploadedImages;
+        if (req.files && req.files.length > 0) {
 
-        const newProduct = await Product.create(data);
+            for (const img of product.images) {
 
-        return res.status(201).json({
+                await cloudinaryService.deleteImage(img.publicId);
 
-            message: "Product created successfully",
+            }
 
-            product: newProduct,
+            const uploadedImages = [];
+
+            for (const file of req.files) {
+
+                const image = await cloudinaryService.uploadImage(file.buffer);
+
+                uploadedImages.push({
+
+                    url: image.secure_url,
+
+                    publicId: image.public_id,
+
+                });
+
+            }
+
+            req.body.images = uploadedImages;
+
+        }
+
+        const editedProduct = await Product.findByIdAndUpdate(
+
+            req.params.id,
+
+            req.body,
+
+            {
+
+                new: true,
+
+                runValidators: true,
+
+            }
+
+        );
+
+        return res.status(200).json({
+
+            message: "Product updated successfully",
+
+            product: editedProduct,
 
         });
 
