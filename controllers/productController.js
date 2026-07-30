@@ -301,10 +301,51 @@ const deleteProduct = async (req, res) => {
 
 };
 
+const deleteProductImage = async (req, res) => {
+    try {
+
+        const { id, imageIndex } = req.params;
+
+        const product = await Product.findById(id);
+
+        if (!product) {
+            return res.status(404).json({
+                message: "Product not found",
+            });
+        }
+
+        const image = product.images[imageIndex];
+
+        if (!image) {
+            return res.status(404).json({
+                message: "Image not found",
+            });
+        }
+
+        await cloudinaryService.deleteImage(image.publicId);
+
+        product.images.splice(imageIndex, 1);
+
+        await product.save();
+
+        return res.json({
+            message: "Image deleted successfully",
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            message: error.message,
+        });
+
+    }
+};
+
 module.exports = {
     getAllProducts,
     getProduct,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    deleteProductImage,
 };
