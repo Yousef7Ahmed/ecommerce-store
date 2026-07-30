@@ -8,8 +8,9 @@ const {
     getProduct,
     createProduct,
     updateProduct,
-    deleteProduct
-} = require("../controllers/productController")
+    deleteProduct,
+    deleteProductImage,
+} = require("../controllers/productController");
 
 const {createProductSchema, updateProductSchema} = require("../validators/product.validator")
 const {objectIdSchema} = require("../validators/common.validator")
@@ -36,5 +37,17 @@ router.route("/:id")
                 updateProduct
             )
             .delete(validate(objectIdSchema, "params"),authMiddleware, checkRole(["ADMIN"]), deleteProduct)
+
+router.delete(
+    "/:id/images",
+
+    validate(objectIdSchema, "params"),
+
+    authMiddleware,
+
+    checkRole(["ADMIN", "MANAGER"]),
+
+    deleteProductImage
+);
 
 module.exports = router
