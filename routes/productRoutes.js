@@ -10,7 +10,7 @@ const {
     updateProduct,
     deleteProduct,
     deleteProductImage,
-} = require("../controllers/productController")
+} = require("../controllers/productController");
 
 const {createProductSchema, updateProductSchema} = require("../validators/product.validator")
 const {objectIdSchema} = require("../validators/common.validator")
