@@ -37,7 +37,7 @@ const getAllProducts = async (req, res) => {
 
             thumbnail: product.images?.[0]?.url || "",
 
-            images: product.images,
+            images: product.images.map(img => img.url),
 
             rating: product.averageRating || 0,
 
@@ -301,67 +301,10 @@ const deleteProduct = async (req, res) => {
 
 };
 
-const deleteProductImage = async (req, res) => {
-
-    try {
-
-        const { publicId } = req.body;
-
-        const product = await Product.findById(req.params.id);
-
-        if (!product) {
-
-            return res.status(404).json({
-                message: "Product not found",
-            });
-
-        }
-
-        const image = product.images.find(
-            img => img.publicId === publicId
-        );
-
-        if (!image) {
-
-            return res.status(404).json({
-                message: "Image not found",
-            });
-
-        }
-
-        await cloudinaryService.deleteImage(publicId);
-
-        product.images = product.images.filter(
-            img => img.publicId !== publicId
-        );
-
-        await product.save();
-
-        return res.json({
-
-            message: "Image deleted successfully",
-
-            images: product.images,
-
-        });
-
-    } catch (err) {
-
-        return res.status(500).json({
-
-            message: err.message,
-
-        });
-
-    }
-
-};
-
 module.exports = {
     getAllProducts,
     getProduct,
     createProduct,
     updateProduct,
-    deleteProduct,
-    deleteProductImage,
+    deleteProduct
 };
