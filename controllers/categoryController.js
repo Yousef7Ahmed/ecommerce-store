@@ -90,22 +90,31 @@ const getCategoryProducts = async (req, res) => {
             category: category._id
         }).populate("category");
 
-        const formattedProducts = products.map(product => ({
-            id: product._id,
-            title: product.title,
-            description: product.description,
-            price: product.price,
-            stock: product.stock,
-            thumbnail: product.image,
-            images: [product.image],
-            rating: product.averageRating,
-            discountPercentage: 0,
-            category: {
-                id: category._id,
-                name: category.name,
-                slug: category.slug
-            }
-        }));
+const formattedProducts = products.map(product => ({
+    id: product._id,
+
+    title: product.title,
+
+    description: product.description,
+
+    price: product.price,
+
+    stock: product.stock,
+
+    thumbnail: product.images?.[0]?.url || "",
+
+    images: product.images?.map(img => img.url) || [],
+
+    rating: product.averageRating || 0,
+
+    discountPercentage: 0,
+
+    category: {
+        id: category._id,
+        name: category.name,
+        slug: category.slug,
+    },
+}));
 
         res.json(formattedProducts);
 
