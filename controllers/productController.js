@@ -188,33 +188,27 @@ const updateProduct = async (req, res) => {
 
         }
 
-        if (req.files && req.files.length > 0) {
+if (req.files && req.files.length > 0) {
 
-            for (const img of product.images) {
+    const uploadedImages = [];
 
-                await cloudinaryService.deleteImage(img.publicId);
+    for (const file of req.files) {
 
-            }
+        const image = await cloudinaryService.uploadImage(file.buffer);
 
-            const uploadedImages = [];
+        uploadedImages.push({
+            url: image.secure_url,
+            publicId: image.public_id,
+        });
 
-            for (const file of req.files) {
+    }
 
-                const image = await cloudinaryService.uploadImage(file.buffer);
+    req.body.images = [
+        ...product.images,
+        ...uploadedImages,
+    ];
 
-                uploadedImages.push({
-
-                    url: image.secure_url,
-
-                    publicId: image.public_id,
-
-                });
-
-            }
-
-            req.body.images = uploadedImages;
-
-        }
+}
 
         const editedProduct = await Product.findByIdAndUpdate(
 
