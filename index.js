@@ -22,9 +22,9 @@ const reviewRoutes = require("./routes/reviewRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const paymentRoutes = require("./routes/payment.routes");
 const orderRoutes = require("./routes/order.routes");
-const cartRoutes = require("./routes/cartRoutes")
-const checkoutRoutes = require("./routes/checkoutRoutes")
-
+const cartRoutes = require("./routes/cartRoutes");
+const checkoutRoutes = require("./routes/checkoutRoutes");
+const bannerRoutes = require("./routes/bannerRoutes");
 
 app.use("/api/products", productRoutes);
 app.use("/api/users", authRoutes);
@@ -36,9 +36,8 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/checkout", checkoutRoutes);
-
-
+app.use("/api/banners", bannerRoutes);
 
 app.listen(port, () => {
-    console.log("listening on port 3000");
+  console.log("listening on port 3000");
 });
