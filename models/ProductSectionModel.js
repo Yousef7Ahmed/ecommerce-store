@@ -8,24 +8,20 @@ const productSectionSchema = new mongoose.Schema(
       trim: true,
     },
 
-    subtitle: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-
     type: {
       type: String,
       enum: ["category", "products"],
       required: true,
     },
 
+    // Category mode
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
       default: null,
     },
 
+    // Specific products mode
     products: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -33,13 +29,43 @@ const productSectionSchema = new mongoose.Schema(
       },
     ],
 
-    limit: {
-      type: Number,
-      default: 8,
-      min: 1,
-      max: 50,
+    /*
+      Where should this section appear?
+    */
+    location: {
+      type: String,
+
+      enum: [
+        "home",
+        "products",
+        "categories",
+        "category",
+        "product",
+      ],
+
+      required: true,
+
+      default: "home",
     },
 
+    /*
+      Used when location needs a specific target.
+
+      category:
+        targetId = category ID
+
+      product:
+        targetId = product ID
+    */
+    targetId: {
+      type: mongoose.Schema.Types.ObjectId,
+
+      default: null,
+    },
+
+    /*
+      Position INSIDE the selected location
+    */
     order: {
       type: Number,
       default: 0,
@@ -48,21 +74,6 @@ const productSectionSchema = new mongoose.Schema(
     active: {
       type: Boolean,
       default: true,
-    },
-
-    viewAll: {
-      type: Boolean,
-      default: false,
-    },
-
-    viewAllText: {
-      type: String,
-      default: "View All",
-    },
-
-    viewAllLink: {
-      type: String,
-      default: "",
     },
   },
   {

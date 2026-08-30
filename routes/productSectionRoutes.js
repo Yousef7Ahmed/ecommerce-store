@@ -4,7 +4,7 @@ const authMiddleware = require("../middlewares/authMiddleware");
 const checkRole = require("../middlewares/checkRole");
 
 const {
-  getActiveProductSections,
+  getProductSections,
   getAllProductSections,
   createProductSection,
   updateProductSection,
@@ -18,11 +18,21 @@ const router = express.Router();
 // PUBLIC
 // =====================================
 
-router.get("/", getActiveProductSections);
+router.get("/", getProductSections);
 
 // =====================================
 // ADMIN
 // =====================================
+
+// IMPORTANT:
+// This MUST come before /:id
+
+router.put(
+  "/admin/order",
+  authMiddleware,
+  checkRole(["ADMIN"]),
+  updateProductSectionOrder,
+);
 
 router.get(
   "/admin",
@@ -40,13 +50,6 @@ router.delete(
   authMiddleware,
   checkRole(["ADMIN"]),
   deleteProductSection,
-);
-
-router.put(
-  "/admin/order",
-  authMiddleware,
-  checkRole(["ADMIN"]),
-  updateProductSectionOrder,
 );
 
 module.exports = router;

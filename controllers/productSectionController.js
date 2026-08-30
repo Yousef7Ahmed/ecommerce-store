@@ -3,71 +3,67 @@ const Product = require("../models/ProductModel");
 
 // =====================================
 // PUBLIC
-// GET ACTIVE PRODUCT SECTIONS
+// GET SECTIONS
 // =====================================
 
-const getActiveProductSections = async (req, res) => {
+const getProductSections = async (req, res) => {
   try {
-    const sections = await ProductSection.find({
+    const { location, targetId } = req.query;
+
+    const filter = {
       active: true,
-    })
+    };
+
+    if (location) {
+      filter.location = location;
+    }
+
+    /*
+      If targetId exists:
+
+      category page:
+        targetId = category ID
+
+      product page:
+        targetId = product ID
+
+      If targetId is not provided,
+      global sections are returned.
+    */
+
+    if (targetId) {
+      filter.$or = [{ targetId: targetId }, { targetId: null }];
+    } else {
+      filter.targetId = null;
+    }
+
+    const sections = await ProductSection.find(filter)
+      .populate("category")
+      .populate("products")
       .sort({
         order: 1,
         createdAt: -1,
-      })
-      .populate("category")
-      .populate("products");
+      });
+
+    /*
+      For category sections,
+      load products from that category.
+    */
 
     const result = [];
 
     for (const section of sections) {
-      let products = [];
+      const sectionObject = section.toObject();
 
-      // ================================
-      // CATEGORY
-      // ================================
+      if (section.type === "category" && section.category) {
+        const products = await Product.find({
+          category: section.category._id,
+        }).limit(20);
 
-      if (section.type === "category") {
-        if (!section.category) {
-          products = [];
-        } else {
-          products = await Product.find({
-            category: section.category._id,
-          })
-            .limit(section.limit)
-            .populate("category");
-        }
+        sectionObject.products = products;
       }
 
-      // ================================
-      // SPECIFIC PRODUCTS
-      // ================================
-
-      if (section.type === "products") {
-        products = section.products.slice(0, section.limit);
-      }
-
-      result.push({
-        _id: section._id,
-        title: section.title,
-        subtitle: section.subtitle,
-
-        type: section.type,
-
-        category: section.category,
-
-        products,
-
-        limit: section.limit,
-
-        order: section.order,
-
-        viewAll: section.viewAll,
-
-        viewAllText: section.viewAllText,
-
-        viewAllLink: section.viewAllLink,
-      });
+      result.push(sectionObject);
     }
 
     res.status(200).json(result);
@@ -82,21 +78,24 @@ const getActiveProductSections = async (req, res) => {
 
 // =====================================
 // ADMIN
-// GET ALL SECTIONS
+// GET ALL
 // =====================================
 
 const getAllProductSections = async (req, res) => {
   try {
     const sections = await ProductSection.find()
+      .populate("category")
+      .populate("products")
       .sort({
+        location: 1,
         order: 1,
         createdAt: -1,
-      })
-      .populate("category")
-      .populate("products");
+      });
 
     res.status(200).json(sections);
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       message: error.message,
     });
@@ -104,7 +103,6 @@ const getAllProductSections = async (req, res) => {
 };
 
 // =====================================
-// ADMIN
 // CREATE
 // =====================================
 
@@ -112,16 +110,13 @@ const createProductSection = async (req, res) => {
   try {
     const {
       title,
-      subtitle,
       type,
       category,
       products,
-      limit,
+      location,
+      targetId,
       order,
       active,
-      viewAll,
-      viewAllText,
-      viewAllLink,
     } = req.body;
 
     if (!title) {
@@ -130,9 +125,9 @@ const createProductSection = async (req, res) => {
       });
     }
 
-    if (!["category", "products"].includes(type)) {
+    if (!location) {
       return res.status(400).json({
-        message: "Invalid section type",
+        message: "Section location is required",
       });
     }
 
@@ -142,18 +137,14 @@ const createProductSection = async (req, res) => {
       });
     }
 
-    if (
-      type === "products" &&
-      (!Array.isArray(products) || products.length === 0)
-    ) {
+    if (type === "products" && (!products || products.length === 0)) {
       return res.status(400).json({
-        message: "At least one product is required",
+        message: "Select at least one product",
       });
     }
 
     const section = await ProductSection.create({
       title,
-      subtitle: subtitle || "",
 
       type,
 
@@ -161,17 +152,13 @@ const createProductSection = async (req, res) => {
 
       products: type === "products" ? products : [],
 
-      limit: Number(limit) || 8,
+      location,
+
+      targetId: targetId || null,
 
       order: Number(order) || 0,
 
-      active: active === false || active === "false" ? false : true,
-
-      viewAll: viewAll === true || viewAll === "true",
-
-      viewAllText: viewAllText || "View All",
-
-      viewAllLink: viewAllLink || "",
+      active: active !== false,
     });
 
     const populatedSection = await ProductSection.findById(section._id)
@@ -180,6 +167,7 @@ const createProductSection = async (req, res) => {
 
     res.status(201).json({
       message: "Product section created successfully",
+
       section: populatedSection,
     });
   } catch (error) {
@@ -192,7 +180,6 @@ const createProductSection = async (req, res) => {
 };
 
 // =====================================
-// ADMIN
 // UPDATE
 // =====================================
 
@@ -208,75 +195,30 @@ const updateProductSection = async (req, res) => {
 
     const {
       title,
-      subtitle,
       type,
       category,
       products,
-      limit,
+      location,
+      targetId,
       order,
       active,
-      viewAll,
-      viewAllText,
-      viewAllLink,
     } = req.body;
 
-    if (title !== undefined) {
-      section.title = title;
-    }
+    section.title = title ?? section.title;
 
-    if (subtitle !== undefined) {
-      section.subtitle = subtitle;
-    }
+    section.type = type ?? section.type;
 
-    if (type !== undefined) {
-      if (!["category", "products"].includes(type)) {
-        return res.status(400).json({
-          message: "Invalid section type",
-        });
-      }
+    section.category = type === "category" ? category : null;
 
-      section.type = type;
-    }
+    section.products = type === "products" ? products || [] : [];
 
-    if (section.type === "category") {
-      if (category !== undefined) {
-        section.category = category;
-      }
+    section.location = location ?? section.location;
 
-      section.products = [];
-    }
+    section.targetId = targetId || null;
 
-    if (section.type === "products") {
-      section.category = null;
+    section.order = order !== undefined ? Number(order) : section.order;
 
-      if (products !== undefined) {
-        section.products = Array.isArray(products) ? products : [];
-      }
-    }
-
-    if (limit !== undefined) {
-      section.limit = Number(limit);
-    }
-
-    if (order !== undefined) {
-      section.order = Number(order);
-    }
-
-    if (active !== undefined) {
-      section.active = active === true || active === "true";
-    }
-
-    if (viewAll !== undefined) {
-      section.viewAll = viewAll === true || viewAll === "true";
-    }
-
-    if (viewAllText !== undefined) {
-      section.viewAllText = viewAllText;
-    }
-
-    if (viewAllLink !== undefined) {
-      section.viewAllLink = viewAllLink;
-    }
+    section.active = active !== undefined ? active : section.active;
 
     await section.save();
 
@@ -286,6 +228,7 @@ const updateProductSection = async (req, res) => {
 
     res.status(200).json({
       message: "Product section updated successfully",
+
       section: populatedSection,
     });
   } catch (error) {
@@ -298,7 +241,6 @@ const updateProductSection = async (req, res) => {
 };
 
 // =====================================
-// ADMIN
 // DELETE
 // =====================================
 
@@ -316,6 +258,8 @@ const deleteProductSection = async (req, res) => {
       message: "Product section deleted successfully",
     });
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       message: error.message,
     });
@@ -323,7 +267,6 @@ const deleteProductSection = async (req, res) => {
 };
 
 // =====================================
-// ADMIN
 // UPDATE ORDER
 // =====================================
 
@@ -333,7 +276,7 @@ const updateProductSectionOrder = async (req, res) => {
 
     if (!Array.isArray(sections)) {
       return res.status(400).json({
-        message: "Sections must be an array",
+        message: "Invalid sections data",
       });
     }
 
@@ -349,6 +292,8 @@ const updateProductSectionOrder = async (req, res) => {
       message: "Section order updated successfully",
     });
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       message: error.message,
     });
@@ -356,7 +301,7 @@ const updateProductSectionOrder = async (req, res) => {
 };
 
 module.exports = {
-  getActiveProductSections,
+  getProductSections,
   getAllProductSections,
   createProductSection,
   updateProductSection,
