@@ -25,6 +25,7 @@ const orderRoutes = require("./routes/order.routes");
 const cartRoutes = require("./routes/cartRoutes");
 const checkoutRoutes = require("./routes/checkoutRoutes");
 const bannerRoutes = require("./routes/bannerRoutes");
+const productSectionRoutes = require("./routes/productSectionRoutes");
 
 app.use("/api/products", productRoutes);
 app.use("/api/users", authRoutes);
@@ -37,6 +38,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api/banners", bannerRoutes);
+app.use("/api/product-sections", productSectionRoutes);
 
 app.listen(port, () => {
   console.log("listening on port 3000");
