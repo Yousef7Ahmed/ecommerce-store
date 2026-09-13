@@ -1,5 +1,9 @@
 const HomeSection = require("../models/HomeSection");
 
+// =====================================
+// GET ACTIVE HOME SECTIONS
+// =====================================
+
 exports.getHomeSections = async (req, res) => {
   try {
     const sections = await HomeSection.find({
@@ -10,39 +14,57 @@ exports.getHomeSections = async (req, res) => {
 
     res.json(sections);
   } catch (error) {
-    console.error(error);
+    console.error("GET HOME SECTIONS ERROR:", error);
 
     res.status(500).json({
       message: "Failed to load home sections",
     });
   }
 };
+
+// =====================================
+// GET ALL HOME SECTIONS - ADMIN
+// =====================================
+
 exports.getAllHomeSections = async (req, res) => {
   try {
-    const sections = await HomeSection.find().sort({ order: 1 });
+    const sections = await HomeSection.find().sort({
+      order: 1,
+    });
 
     res.json(sections);
   } catch (error) {
-    console.error(error);
+    console.error("GET ADMIN HOME SECTIONS ERROR:", error);
 
     res.status(500).json({
       message: "Failed to load home sections",
     });
   }
 };
+
+// =====================================
+// CREATE HOME SECTION
+// =====================================
+
 exports.createHomeSection = async (req, res) => {
   try {
     const section = await HomeSection.create(req.body);
 
     res.status(201).json(section);
   } catch (error) {
-    console.error(error);
+    console.error("CREATE HOME SECTION ERROR:", error);
 
     res.status(500).json({
       message: "Failed to create home section",
+      error: error.message,
     });
   }
 };
+
+// =====================================
+// UPDATE HOME SECTION
+// =====================================
+
 exports.updateHomeSection = async (req, res) => {
   try {
     const section = await HomeSection.findByIdAndUpdate(
@@ -62,23 +84,22 @@ exports.updateHomeSection = async (req, res) => {
 
     res.json(section);
   } catch (error) {
-    console.error(error);
+    console.error("UPDATE HOME SECTION ERROR:", error);
 
     res.status(500).json({
       message: "Failed to update home section",
+      error: error.message,
     });
   }
 };
-exports.updateHomeSection = async (req, res) => {
+
+// =====================================
+// DELETE HOME SECTION
+// =====================================
+
+exports.deleteHomeSection = async (req, res) => {
   try {
-    const section = await HomeSection.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      },
-    );
+    const section = await HomeSection.findByIdAndDelete(req.params.id);
 
     if (!section) {
       return res.status(404).json({
@@ -86,15 +107,23 @@ exports.updateHomeSection = async (req, res) => {
       });
     }
 
-    res.json(section);
+    res.json({
+      message: "Section deleted successfully",
+    });
   } catch (error) {
-    console.error(error);
+    console.error("DELETE HOME SECTION ERROR:", error);
 
     res.status(500).json({
-      message: "Failed to update home section",
+      message: "Failed to delete home section",
+      error: error.message,
     });
   }
 };
+
+// =====================================
+// UPDATE HOME SECTIONS ORDER
+// =====================================
+
 exports.updateHomeSectionOrder = async (req, res) => {
   try {
     const { sections } = req.body;
@@ -117,10 +146,11 @@ exports.updateHomeSectionOrder = async (req, res) => {
       message: "Order updated successfully",
     });
   } catch (error) {
-    console.error(error);
+    console.error("UPDATE HOME SECTION ORDER ERROR:", error);
 
     res.status(500).json({
       message: "Failed to update order",
+      error: error.message,
     });
   }
 };
