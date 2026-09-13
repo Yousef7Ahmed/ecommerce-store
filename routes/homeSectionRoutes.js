@@ -14,11 +14,20 @@ const {
 
 const router = express.Router();
 
+// =====================================
+// PUBLIC
+// =====================================
+
 router.get("/", getHomeSections);
+
+// =====================================
+// ADMIN
+// =====================================
 
 router.get("/admin", authMiddleware, checkRole(["ADMIN"]), getAllHomeSections);
 
-// مهم: route الترتيب قبل /:id
+// مهم جدًا:
+// لازم /admin/order يكون قبل /:id
 router.put(
   "/admin/order",
   authMiddleware,

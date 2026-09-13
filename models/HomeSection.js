@@ -4,7 +4,9 @@ const homeSectionSchema = new mongoose.Schema(
   {
     type: {
       type: String,
+
       enum: ["hero", "categories", "featured-products", "product", "banner"],
+
       required: true,
     },
 
@@ -24,6 +26,7 @@ const homeSectionSchema = new mongoose.Schema(
       default: true,
     },
   },
+
   {
     timestamps: true,
   },
