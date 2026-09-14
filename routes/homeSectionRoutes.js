@@ -18,16 +18,18 @@ const router = express.Router();
 // PUBLIC
 // =====================================
 
+// Get active home sections
 router.get("/", getHomeSections);
 
 // =====================================
 // ADMIN
 // =====================================
 
+// Get all home sections
 router.get("/admin", authMiddleware, checkRole(["ADMIN"]), getAllHomeSections);
 
-// مهم جدًا:
-// لازم /admin/order يكون قبل /:id
+// IMPORTANT:
+// /admin/order must come before /:id
 router.put(
   "/admin/order",
   authMiddleware,
@@ -35,12 +37,13 @@ router.put(
   updateHomeSectionOrder,
 );
 
+// Create section
 router.post("/", authMiddleware, checkRole(["ADMIN"]), createHomeSection);
 
+// Update section
 router.put("/:id", authMiddleware, checkRole(["ADMIN"]), updateHomeSection);
 
+// Delete section
 router.delete("/:id", authMiddleware, checkRole(["ADMIN"]), deleteHomeSection);
-
-router.get("/:id", getProductSectionById);
 
 module.exports = router;
