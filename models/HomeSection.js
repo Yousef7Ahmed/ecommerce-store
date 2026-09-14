@@ -4,94 +4,42 @@ const homeSectionSchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      required: true,
       enum: [
         "hero",
         "multi-banner",
         "full-banner",
         "image-text",
         "image-text-reverse",
-        "product",
         "categories",
+        "product",
         "about",
         "image-grid",
         "features",
         "cta",
+
+        // القديمة عشان أي Sections موجودة عندك متتكسرش
+        "featured-products",
+        "banner",
       ],
+      required: true,
     },
 
-    title: {
-      type: String,
-      default: "",
+    // كل المحتوى القابل للتعديل
+    content: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
     },
 
-    subtitle: {
-      type: String,
-      default: "",
+    // إعدادات الـ section
+    settings: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
     },
 
-    description: {
-      type: String,
-      default: "",
-    },
-
-    image: {
-      type: String,
-      default: "",
-    },
-
-    buttonText: {
-      type: String,
-      default: "",
-    },
-
-    buttonLink: {
-      type: String,
-      default: "",
-    },
-
-    // Product Section
+    // لو الـ section مربوط بـ Product Section
     refId: {
       type: mongoose.Schema.Types.ObjectId,
       default: null,
-    },
-
-    // Multiple banners / image grids / features
-    items: {
-      type: [
-        {
-          title: {
-            type: String,
-            default: "",
-          },
-
-          subtitle: {
-            type: String,
-            default: "",
-          },
-
-          description: {
-            type: String,
-            default: "",
-          },
-
-          image: {
-            type: String,
-            default: "",
-          },
-
-          buttonText: {
-            type: String,
-            default: "",
-          },
-
-          buttonLink: {
-            type: String,
-            default: "",
-          },
-        },
-      ],
-      default: [],
     },
 
     order: {
