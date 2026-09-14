@@ -6,6 +6,7 @@ const homeSectionSchema = new mongoose.Schema(
       type: String,
       enum: [
         "hero",
+        "hero-slider",
         "multi-banner",
         "full-banner",
         "image-text",
