@@ -41,4 +41,6 @@ router.put("/:id", authMiddleware, checkRole(["ADMIN"]), updateHomeSection);
 
 router.delete("/:id", authMiddleware, checkRole(["ADMIN"]), deleteHomeSection);
 
+router.get("/:id", getProductSectionById);
+
 module.exports = router;

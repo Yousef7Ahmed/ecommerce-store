@@ -154,3 +154,46 @@ exports.updateHomeSectionOrder = async (req, res) => {
     });
   }
 };
+
+exports.deleteHomeSection = async (req, res) => {
+  try {
+    const section = await HomeSection.findByIdAndDelete(req.params.id);
+
+    if (!section) {
+      return res.status(404).json({
+        message: "Section not found",
+      });
+    }
+
+    res.json({
+      message: "Section deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Failed to delete section",
+    });
+  }
+};
+exports.getProductSectionById = async (req, res) => {
+  try {
+    const section = await ProductSection.findById(req.params.id).populate(
+      "products",
+    );
+
+    if (!section) {
+      return res.status(404).json({
+        message: "Product section not found",
+      });
+    }
+
+    res.json(section);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Failed to load product section",
+    });
+  }
+};
