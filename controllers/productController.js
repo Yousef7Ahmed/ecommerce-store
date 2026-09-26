@@ -19,13 +19,16 @@ const formatProduct = (product) => {
     return {
         id: product._id,
         title: product.title,
+        titleAr: product.titleAr || "",
         description: product.description,
+        descriptionAr: product.descriptionAr || "",
         price,
         compareAtPrice,
         discountPercentage,
         category: {
             id: product.category?._id,
             name: product.category?.name,
+            nameAr: product.category?.nameAr || "",
             slug: product.category?.slug,
             image: product.category?.image,
         },
@@ -89,7 +92,8 @@ const getAllProducts = async (req, res) => {
         const filter = {};
 
         if (q && String(q).trim()) {
-            filter.title = { $regex: escapeRegex(String(q).trim()), $options: "i" };
+            const rx = { $regex: escapeRegex(String(q).trim()), $options: "i" };
+            filter.$or = [{ title: rx }, { titleAr: rx }];
         }
 
         if (category) {

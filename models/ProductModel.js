@@ -4,6 +4,9 @@ const { Schema } = mongoose
 const productSchema = new Schema({
     title: { type: String, trim: true },
     description: String,
+    // الاسم والوصف بالعربي (اختياري)
+    titleAr: { type: String, default: "", trim: true },
+    descriptionAr: { type: String, default: "" },
     images: [
         {
             url: String,

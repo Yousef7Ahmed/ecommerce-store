@@ -19,6 +19,8 @@ const getAllCategories = async (req, res) => {
                 return {
                     id: category._id,
                     name: category.name,
+                    nameAr: category.nameAr || "",
+                    descriptionAr: category.descriptionAr || "",
                     slug: category.slug,
                     image: category.image,
                     description: category.description,
@@ -58,6 +60,8 @@ const getCategory = async (req, res) => {
         return res.status(200).json({
             id: category._id,
             name: category.name,
+            nameAr: category.nameAr || "",
+            descriptionAr: category.descriptionAr || "",
             slug: category.slug,
             image: category.image,
             description: category.description,
@@ -112,6 +116,7 @@ const formattedProducts = products.map(product => ({
     category: {
         id: category._id,
         name: category.name,
+        nameAr: category.nameAr || "",
         slug: category.slug,
     },
 }));

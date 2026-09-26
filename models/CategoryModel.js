@@ -25,6 +25,18 @@ const categorySchema = new mongoose.Schema(
         default:""
     },
 
+    // الاسم والوصف بالعربي (اختياري — لو فاضي بيتعرض الإنجليزي)
+    nameAr:{
+        type:String,
+        default:"",
+        trim:true
+    },
+
+    descriptionAr:{
+        type:String,
+        default:""
+    },
+
     featured:{
         type:Boolean,
         default:false
