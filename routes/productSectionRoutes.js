@@ -5,6 +5,7 @@ const checkRole = require("../middlewares/checkRole");
 
 const {
   getProductSections,
+  getProductSectionById,
   getAllProductSections,
   createProductSection,
   updateProductSection,
@@ -40,6 +41,9 @@ router.get(
   checkRole(["ADMIN"]),
   getAllProductSections,
 );
+
+// PUBLIC single section (لازم بعد /admin)
+router.get("/:id", getProductSectionById);
 
 router.post("/", authMiddleware, checkRole(["ADMIN"]), createProductSection);
 

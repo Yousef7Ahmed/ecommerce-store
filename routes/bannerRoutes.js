@@ -9,6 +9,7 @@ const {
   getAllBanners,
   createBanner,
   updateBanner,
+  reorderBanners,
   deleteBanner,
 } = require("../controllers/bannerController");
 
@@ -16,6 +17,7 @@ const router = express.Router();
 
 const upload = multer({
   storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
 });
 
 // =====================================
@@ -31,6 +33,9 @@ router.get("/", getActiveBanners);
 // =====================================
 
 router.get("/admin", authMiddleware, checkRole(["ADMIN"]), getAllBanners);
+
+// ترتيب البانرات (لازم قبل /:id)
+router.put("/admin/order", authMiddleware, checkRole(["ADMIN"]), reorderBanners);
 
 // =====================================
 // ADMIN

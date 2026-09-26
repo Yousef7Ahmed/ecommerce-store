@@ -3,26 +3,10 @@ const mongoose = require("mongoose");
 const homeSectionSchema = new mongoose.Schema(
   {
     type: {
+      // بقى String مفتوح عشان نقدر نضيف أنواع أقسام جديدة من غير ما نعدّل السيرفر
       type: String,
-      enum: [
-        "hero",
-        "hero-slider",
-        "multi-banner",
-        "full-banner",
-        "image-text",
-        "image-text-reverse",
-        "categories",
-        "product",
-        "about",
-        "image-grid",
-        "features",
-        "cta",
-
-        // القديمة عشان أي Sections موجودة عندك متتكسرش
-        "featured-products",
-        "banner",
-      ],
       required: true,
+      trim: true,
     },
 
     // كل المحتوى القابل للتعديل
@@ -56,6 +40,7 @@ const homeSectionSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    minimize: false,
   },
 );
 

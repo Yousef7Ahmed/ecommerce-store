@@ -6,6 +6,7 @@ const validate = require("../middlewares/validate")
 const {
     getAllProducts,
     getProduct,
+    getRelatedProducts,
     createProduct,
     updateProduct,
     deleteProduct,
@@ -26,6 +27,12 @@ router.route("/")
         createProduct
     )
     
+router.get(
+    "/:id/related",
+    validate(objectIdSchema, "params"),
+    getRelatedProducts
+);
+
 router.route("/:id")
             .get(validate(objectIdSchema, "params"),getProduct)
             .put(

@@ -12,7 +12,9 @@ const fileFilter = (req, file, cb) => {
         "image/jpeg",
         "image/png",
         "image/webp",
-        "image/jpg"
+        "image/jpg",
+        "image/gif",
+        "image/avif"
     ]
 
     if (allowedTypes.includes(file.mimetype)) {
@@ -38,7 +40,7 @@ const upload = multer({
 
     // الحد الأقصى لحجم الصورة
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB
+        fileSize: 10 * 1024 * 1024 // 10MB (صور الموبايل كتير بتعدّي 5MB)
     }
 
 })

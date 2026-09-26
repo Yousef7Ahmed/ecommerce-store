@@ -13,7 +13,8 @@ const {
     getMyOrders,
     getAllOrders,
     getOrderById,
-    updateOrderStatus
+    updateOrderStatus,
+    updatePaymentStatus
 } = require("../controllers/orderController")
 const {objectIdSchema} = require("../validators/common.validator")
 
@@ -31,6 +32,14 @@ router.get(
     authMiddleware,
     validate(objectIdSchema, "params"),
     getOrderById
+)
+
+router.put(
+    "/:id/payment",
+    authMiddleware,
+    validate(objectIdSchema, "params"),
+    checkRole(["ADMIN"]),
+    updatePaymentStatus
 )
 
 router.put(

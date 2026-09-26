@@ -1,5 +1,6 @@
 const ProductSection = require("../models/ProductSectionModel");
 const Product = require("../models/ProductModel");
+const { formatProduct } = require("./productController");
 
 // =====================================
 // PUBLIC
@@ -73,6 +74,40 @@ const getProductSections = async (req, res) => {
     res.status(500).json({
       message: error.message,
     });
+  }
+};
+
+// =====================================
+// PUBLIC
+// GET ONE SECTION BY ID (يستخدمه قسم "Products" في البيلدر)
+// =====================================
+
+const getProductSectionById = async (req, res) => {
+  try {
+    const section = await ProductSection.findById(req.params.id)
+      .populate("category")
+      .populate({ path: "products", populate: { path: "category" } });
+
+    if (!section || section.active === false) {
+      return res.status(404).json({ message: "Section not found" });
+    }
+
+    const sectionObject = section.toObject();
+
+    let products = section.products || [];
+
+    if (section.type === "category" && section.category) {
+      products = await Product.find({ category: section.category._id })
+        .populate("category")
+        .sort({ createdAt: -1 })
+        .limit(Number(req.query.limit) || 20);
+    }
+
+    sectionObject.products = products.filter(Boolean).map(formatProduct);
+
+    res.status(200).json(sectionObject);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -302,6 +337,7 @@ const updateProductSectionOrder = async (req, res) => {
 
 module.exports = {
   getProductSections,
+  getProductSectionById,
   getAllProductSections,
   createProductSection,
   updateProductSection,

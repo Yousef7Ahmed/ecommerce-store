@@ -10,6 +10,7 @@ const {
   updateHomeSection,
   deleteHomeSection,
   updateHomeSectionOrder,
+  saveAllHomeSections,
 } = require("../controllers/homeSectionController");
 
 const router = express.Router();
@@ -35,6 +36,14 @@ router.put(
   authMiddleware,
   checkRole(["ADMIN"]),
   updateHomeSectionOrder,
+);
+
+// Save all sections (Builder)
+router.put(
+  "/admin/bulk",
+  authMiddleware,
+  checkRole(["ADMIN", "MANAGER"]),
+  saveAllHomeSections,
 );
 
 // Create section

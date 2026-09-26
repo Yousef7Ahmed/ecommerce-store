@@ -156,3 +156,61 @@ exports.updateHomeSectionOrder = async (req, res) => {
     });
   }
 };
+
+// =====================================
+// SAVE ALL SECTIONS AT ONCE (البيلدر الجديد)
+// بيستقبل كل الأقسام بالترتيب: اللي ليه _id بيتعدل، اللي من غير _id بيتعمل،
+// واللي مش موجود في الليستة بيتحذف
+// =====================================
+
+exports.saveAllHomeSections = async (req, res) => {
+  try {
+    const { sections } = req.body || {};
+
+    if (!Array.isArray(sections)) {
+      return res.status(400).json({ message: "sections must be an array" });
+    }
+
+    const keepIds = [];
+
+    for (let index = 0; index < sections.length; index++) {
+      const item = sections[index] || {};
+
+      if (!item.type) continue;
+
+      const data = {
+        type: item.type,
+        content: item.content || {},
+        settings: item.settings || {},
+        refId: item.refId || null,
+        active: item.active !== false,
+        order: index,
+      };
+
+      let doc = null;
+
+      if (item._id && /^[a-f\d]{24}$/i.test(String(item._id))) {
+        doc = await HomeSection.findByIdAndUpdate(item._id, data, { new: true });
+      }
+
+      if (!doc) {
+        doc = await HomeSection.create(data);
+      }
+
+      keepIds.push(doc._id);
+    }
+
+    await HomeSection.deleteMany({ _id: { $nin: keepIds } });
+
+    const saved = await HomeSection.find().sort({ order: 1 });
+
+    res.json(saved);
+  } catch (error) {
+    console.error("SAVE ALL HOME SECTIONS ERROR:", error);
+
+    res.status(500).json({
+      message: "Failed to save home sections",
+      error: error.message,
+    });
+  }
+};

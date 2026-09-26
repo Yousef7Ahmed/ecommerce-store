@@ -3,10 +3,36 @@ const {Schema} = mongoose
 
 const orderSchema = new Schema(
     {
+        // ممكن يكون فاضي لو العميل طلب من غير تسجيل دخول (Guest checkout)
         user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            default: null
+        },
+        orderNumber: {
+            type: Number,
+            index: true
+        },
+        customer: {
+            name: { type: String, default: "" },
+            email: { type: String, default: "" },
+            phone: { type: String, default: "" }
+        },
+        subtotal: {
+            type: Number,
+            default: 0
+        },
+        shippingFee: {
+            type: Number,
+            default: 0
+        },
+        codFee: {
+            type: Number,
+            default: 0
+        },
+        note: {
+            type: String,
+            default: ""
         },
         products: [
             {
@@ -31,12 +57,12 @@ const orderSchema = new Schema(
         },
         status: {
             type: String,
-            enum: ["pending", "shipped", "delivered", "cancelled"],
+            enum: ["pending", "confirmed", "shipped", "delivered", "cancelled"],
             default: "pending"
         },
         paymentMethod: {
             type: String,
-            enum: ["paypal"],
+            enum: ["paypal", "cod"],
             default: "paypal"
         },
         paymentStatus: {
