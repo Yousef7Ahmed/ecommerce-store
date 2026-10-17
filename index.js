@@ -38,6 +38,7 @@ const homeSectionRoutes = require("./routes/homeSectionRoutes");
 const pageRoutes = require("./routes/pageRoutes");
 const submissionRoutes = require("./routes/submissionRoutes");
 const settingsRoutes = require("./routes/settingsRoutes");
+const seoRoutes = require("./routes/seoRoutes");
 
 app.use("/api/products", productRoutes);
 app.use("/api/users", authRoutes);
@@ -55,6 +56,7 @@ app.use("/api/home-sections", homeSectionRoutes);
 app.use("/api/pages", pageRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/seo", seoRoutes);
 
 // أي خطأ (زي صورة أكبر من الحد أو نوع ملف مش مسموح) يرجع JSON واضح
 // بدل صفحة HTML اللي كانت بتخلي الداشبورد يقول "Something went wrong" من غير سبب

@@ -7,6 +7,11 @@ const productSchema = new Schema({
     // الاسم والوصف بالعربي (اختياري)
     titleAr: { type: String, default: "", trim: true },
     descriptionAr: { type: String, default: "" },
+    // SEO (اختياري — لو فاضي بيتاخد الاسم والوصف)
+    seoTitle: { type: String, default: "", trim: true },
+    seoDescription: { type: String, default: "", trim: true },
+    seoTitleAr: { type: String, default: "", trim: true },
+    seoDescriptionAr: { type: String, default: "", trim: true },
     images: [
         {
             url: String,

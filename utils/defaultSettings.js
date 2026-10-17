@@ -57,6 +57,14 @@ module.exports = {
     copyright: "بيت الذوق. All rights reserved.",
     copyrightAr: "بيت الذوق. جميع الحقوق محفوظة.",
   },
+  seo: {
+    title: "",
+    titleAr: "",
+    description: "",
+    descriptionAr: "",
+    image: "",
+    keywords: "",
+  },
   language: {
     default: "ar",
     switcher: true,
