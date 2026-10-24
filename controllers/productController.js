@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Product = require("../models/ProductModel");
 const Category = require("../models/CategoryModel");
+const { descendantIds } = require("./categoryController");
 const cloudinaryService = require("../services/cloudinaryService");
 
 // ==========================
@@ -114,7 +115,11 @@ const getAllProducts = async (req, res) => {
                 ids.push(...cats.map((c) => String(c._id)));
             }
 
-            filter.category = { $in: ids };
+            // التصنيف بيعرض منتجات الفروع اللي تحته كمان
+            const allCats = await Category.find().select("_id parent").lean();
+            const withSubs = new Set(ids.map(String));
+            ids.forEach((id) => descendantIds(allCats, id).forEach((d) => withSubs.add(d)));
+            filter.category = { $in: [...withSubs] };
         }
 
         if (minPrice !== undefined && minPrice !== "") {
@@ -357,7 +362,37 @@ const deleteProductImage = async (req, res) => {
     }
 };
 
+// GET /api/products/admin/suggestions — أسماء وأوصاف كل المنتجات (للاقتراحات وانت بتكتب منتج جديد)
+const getSuggestions = async (req, res) => {
+    try {
+        const rows = await Product.find({})
+            .select("title titleAr description descriptionAr createdAt")
+            .sort({ createdAt: -1 })
+            .limit(3000)
+            .lean();
+        const uniq = (list) => {
+            const seen = new Set();
+            return list.filter((v) => {
+                const k = String(v || "").trim().toLowerCase();
+                if (!k || seen.has(k)) return false;
+                seen.add(k);
+                return true;
+            });
+        };
+        const plainLen = (h = "") => String(h).replace(/<[^>]*>/g, "").trim().length;
+        res.json({
+            titles: uniq(rows.map((r) => r.title)),
+            titlesAr: uniq(rows.map((r) => r.titleAr)),
+            descriptions: uniq(rows.map((r) => r.description).filter((d) => plainLen(d) > 2)).slice(0, 500),
+            descriptionsAr: uniq(rows.map((r) => r.descriptionAr).filter((d) => plainLen(d) > 2)).slice(0, 500),
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
+    getSuggestions,
     getAllProducts,
     getProduct,
     getRelatedProducts,

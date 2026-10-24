@@ -11,6 +11,7 @@ const {
     updateProduct,
     deleteProduct,
     deleteProductImage,
+    getSuggestions,
 } = require("../controllers/productController");
 
 const {createProductSchema, updateProductSchema} = require("../validators/product.validator")
@@ -27,6 +28,9 @@ router.route("/")
         createProduct
     )
     
+// لازم قبل "/:id"
+router.get("/admin/suggestions", authMiddleware, checkRole(["ADMIN", "MANAGER"]), getSuggestions);
+
 router.get(
     "/:id/related",
     validate(objectIdSchema, "params"),

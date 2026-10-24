@@ -41,6 +41,19 @@ const categorySchema = new mongoose.Schema(
         type:Boolean,
         default:false
     },
+
+    // التصنيف الأب (فاضي = تصنيف رئيسي). ممكن تعمل فروع جوه فروع
+    parent:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Category",
+        default:null
+    },
+
+    // ترتيب الظهور
+    order:{
+        type:Number,
+        default:0
+    },
     imagePublicId:{
 
         type:String

@@ -1,41 +1,58 @@
 const Category = require("../models/CategoryModel");
 const Product = require("../models/ProductModel");
 const cloudinaryService = require("../services/cloudinaryService");
+const mongoose = require("mongoose");
+
+// كل الفروع تحت تصنيف (فروع الفروع كمان)
+const descendantIds = (all, rootId) => {
+    const out = [];
+    const walk = (id) => {
+        all.filter((c) => String(c.parent || "") === String(id)).forEach((c) => {
+            if (out.includes(String(c._id))) return; // حماية من أي لفة
+            out.push(String(c._id));
+            walk(c._id);
+        });
+    };
+    walk(rootId);
+    return out;
+};
+
+const formatCategory = (category, counts = {}, all = []) => {
+    const id = String(category._id);
+    const children = all.filter((c) => String(c.parent || "") === id);
+    const subtree = [id, ...descendantIds(all, id)];
+    return {
+        id: category._id,
+        name: category.name,
+        nameAr: category.nameAr || "",
+        descriptionAr: category.descriptionAr || "",
+        slug: category.slug,
+        image: category.image,
+        description: category.description,
+        featured: category.featured,
+        parent: category.parent ? String(category.parent) : null,
+        order: category.order || 0,
+        childrenCount: children.length,
+        // منتجات التصنيف نفسه + كل الفروع اللي تحته
+        productsCount: subtree.reduce((n, x) => n + (counts[x] || 0), 0),
+        ownProductsCount: counts[id] || 0,
+    };
+};
+
+const productCounts = async () => {
+    const rows = await Product.aggregate([{ $group: { _id: "$category", n: { $sum: 1 } } }]);
+    return Object.fromEntries(rows.map((r) => [String(r._id), r.n]));
+};
+
 // ===============================
 // Get All Categories
 // ===============================
 const getAllCategories = async (req, res) => {
     try {
-
-        const categories = await Category.find().sort({ createdAt: -1 });
-
-        const formattedCategories = await Promise.all(
-            categories.map(async (category) => {
-
-                const productsCount = await Product.countDocuments({
-                    category: category._id
-                });
-
-                return {
-                    id: category._id,
-                    name: category.name,
-                    nameAr: category.nameAr || "",
-                    descriptionAr: category.descriptionAr || "",
-                    slug: category.slug,
-                    image: category.image,
-                    description: category.description,
-                    featured: category.featured,
-                    productsCount
-                };
-            })
-        );
-
-        return res.status(200).json(formattedCategories);
-
+        const [all, counts] = await Promise.all([Category.find().sort({ order: 1, createdAt: -1 }).lean(), productCounts()]);
+        return res.status(200).json(all.map((c) => formatCategory(c, counts, all)));
     } catch (error) {
-        return res.status(500).json({
-            message: error.message
-        });
+        return res.status(500).json({ message: error.message });
     }
 };
 
@@ -44,38 +61,28 @@ const getAllCategories = async (req, res) => {
 // ===============================
 const getCategory = async (req, res) => {
     try {
-
-        const category = await Category.findById(req.params.id);
-
-        if (!category) {
-            return res.status(404).json({
-                message: "Category not found"
-            });
-        }
-
-        const productsCount = await Product.countDocuments({
-            category: category._id
-        });
-
-        return res.status(200).json({
-            id: category._id,
-            name: category.name,
-            nameAr: category.nameAr || "",
-            descriptionAr: category.descriptionAr || "",
-            slug: category.slug,
-            image: category.image,
-            description: category.description,
-            featured: category.featured,
-            productsCount
-        });
-
+        const category = await Category.findById(req.params.id).lean();
+        if (!category) return res.status(404).json({ message: "Category not found" });
+        const [all, counts] = await Promise.all([Category.find().lean(), productCounts()]);
+        return res.status(200).json(formatCategory(category, counts, all));
     } catch (error) {
-        return res.status(500).json({
-            message: error.message
-        });
+        return res.status(500).json({ message: error.message });
     }
 };
 
+// الأب لازم يكون موجود ومش هو نفس التصنيف ولا فرع منه
+const cleanParent = async (value, selfId) => {
+    if (value === undefined) return undefined;
+    if (!value || value === "null" || value === "none") return null;
+    if (!mongoose.isValidObjectId(value)) throw Object.assign(new Error("Invalid parent category"), { status: 400 });
+    if (selfId && String(value) === String(selfId)) throw Object.assign(new Error("A category can't be its own parent"), { status: 400 });
+    const all = await Category.find().select("_id parent").lean();
+    if (!all.some((c) => String(c._id) === String(value))) throw Object.assign(new Error("Parent category not found"), { status: 400 });
+    if (selfId && descendantIds(all, selfId).includes(String(value))) {
+        throw Object.assign(new Error("You can't move a category under one of its own subcategories"), { status: 400 });
+    }
+    return value;
+};
 
 const getCategoryProducts = async (req, res) => {
     try {
@@ -90,8 +97,9 @@ const getCategoryProducts = async (req, res) => {
             });
         }
 
+        const all = await Category.find().select("_id parent").lean();
         const products = await Product.find({
-            category: category._id
+            category: { $in: [category._id, ...descendantIds(all, category._id)] }
         }).populate("category");
 
 const formattedProducts = products.map(product => ({
@@ -146,6 +154,9 @@ const createCategory = async (req, res) => {
         }
 
         const data = req.body;
+        const parent = await cleanParent(data.parent);
+        if (parent !== undefined) data.parent = parent;
+        if (data.order !== undefined) data.order = Number(data.order) || 0;
 
         if (!req.file) {
 
@@ -171,7 +182,7 @@ const createCategory = async (req, res) => {
         });
 
     } catch (error) {
-        return res.status(500).json({
+        return res.status(error.status || 500).json({
             message: error.message
         });
     }
@@ -190,6 +201,10 @@ const updateCategory = async (req, res) => {
                 message: "Category not found"
             });
         }
+        const parent = await cleanParent(req.body.parent, category._id);
+        if (parent !== undefined) req.body.parent = parent;
+        if (req.body.order !== undefined) req.body.order = Number(req.body.order) || 0;
+
         if (req.file) {
 
             const image = await cloudinaryService.uploadImage(req.file.buffer);
@@ -223,7 +238,7 @@ const updateCategory = async (req, res) => {
         });
 
     } catch (error) {
-        return res.status(500).json({
+        return res.status(error.status || 500).json({
             message: error.message
         });
     }
@@ -260,6 +275,9 @@ const deleteCategory = async (req, res) => {
 
         }
 
+        // الفروع اللي تحته بتطلع مكانه (لتصنيفه الأب) بدل ما تضيع
+        await Category.updateMany({ parent: category._id }, { $set: { parent: category.parent || null } });
+
         await Category.findByIdAndDelete(req.params.id);
 
         return res.status(200).json({
@@ -274,6 +292,7 @@ const deleteCategory = async (req, res) => {
 };
 
 module.exports = {
+    descendantIds,
     getAllCategories,
     getCategory,
     createCategory,
