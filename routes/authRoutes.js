@@ -33,9 +33,7 @@ router.post(
 
 );
 
-// تأكيد الإيميل + نسيت كلمة السر
-router.post("/verify-email", authController.verifyEmail);
-router.post("/resend-verification", validate(emailSchema), authController.resendVerification);
+// نسيت كلمة السر
 router.post("/forgot-password", validate(emailSchema), authController.forgotPassword);
 router.post("/reset-password", validate(resetSchema), authController.resetPassword);
 

@@ -2,6 +2,7 @@ const Joi = require("joi");
 const Order = require("../models/Order.Schema");
 const User = require("../models/User.Model");
 const { getStoreSettings } = require("./settingsController");
+const { recordPurchase } = require("../services/analyticsService");
 const { OrderError, buildLines, calcFees, reserveStock, nextOrderNumber } = require("../services/orderService");
 
 const addressSchema = Joi.object({
@@ -88,6 +89,8 @@ const placeOrder = async (req, res) => {
         if (req.user?.id) {
             await User.updateOne({ _id: req.user.id }, { $set: { cart: [] } }).catch(() => null);
         }
+
+        await recordPurchase(req, order);
 
         return res.status(201).json({
             message: "تم تأكيد طلبك",

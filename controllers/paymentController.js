@@ -95,6 +95,8 @@ const captureOrder = async (req, res) => {
             await user.save();
         }
 
+        await require("../services/analyticsService").recordPurchase(req, order);
+
         return res.status(200).json({ message: "Payment completed successfully", order });
     } catch (error) {
         console.log(error.response?.data || error);
